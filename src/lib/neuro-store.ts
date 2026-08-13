@@ -210,9 +210,10 @@ export function useNeuro() {
           new Date(latest.date).getMonth() === today.getMonth() &&
           new Date(latest.date).getFullYear() === today.getFullYear();
 
-        if (sameMonth) {
+        if (sameMonth && latest) {
           list[list.length - 1] = { ...latest, [key]: value, date: today.toISOString() };
         } else {
+
           list.push({
             id: `a-${today.getTime()}`,
             date: today.toISOString(),
