@@ -246,7 +246,7 @@ export function useNeuro() {
 export function latestOf(assessments: Assessment[], key: "parkinson" | "cognitive" | "stroke") {
   for (let i = assessments.length - 1; i >= 0; i--) {
     const a = assessments[i];
-    if (a[key]) return a;
+    if (a && a[key]) return a;
   }
   return undefined;
 }
@@ -306,25 +306,25 @@ export function buildRecommendations(assessments: Assessment[]) {
     });
   }
   if (c) {
-    const weakest = (
-      [
-        ["memory", c.memory],
-        ["attention", c.attention],
-        ["recall", c.recall],
-        ["reaction", c.reaction],
-        ["pattern", c.pattern],
-      ] as const
-    ).sort((a, b) => a[1] - b[1])[0];
+    const areas: { name: string; score: number }[] = [
+      { name: "memory", score: c.memory },
+      { name: "attention", score: c.attention },
+      { name: "recall", score: c.recall },
+      { name: "reaction", score: c.reaction },
+      { name: "pattern", score: c.pattern },
+    ];
+    areas.sort((a, b) => a.score - b.score);
+    const weakest = areas[0]!.name;
     recs.push({
-      title: `Cognitive exercises for ${weakest[0]}`,
+      title: `Cognitive exercises for ${weakest}`,
       body:
-        weakest[0] === "memory"
+        weakest === "memory"
           ? "Practise number recall, card matching and sequence games."
-          : weakest[0] === "attention"
+          : weakest === "attention"
             ? "Practise symbol matching, target selection and focus games."
-            : weakest[0] === "reaction"
+            : weakest === "reaction"
               ? "Practise reaction games and visual response exercises."
-              : weakest[0] === "recall"
+              : weakest === "recall"
                 ? "Practise object recall and delayed-recall exercises."
                 : "Practise pattern recognition sequences.",
       tone: "monitor",
