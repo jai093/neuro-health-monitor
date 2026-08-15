@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CognitiveRouteImport } from './routes/cognitive'
+import { Route as ParkinsonRouteImport } from './routes/parkinson'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CognitiveRoute = CognitiveRouteImport.update({
+  id: '/cognitive',
+  path: '/cognitive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParkinsonRoute = ParkinsonRouteImport.update({
+  id: '/parkinson',
+  path: '/parkinson',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cognitive': typeof CognitiveRoute
+  '/parkinson': typeof ParkinsonRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cognitive': typeof CognitiveRoute
+  '/parkinson': typeof ParkinsonRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cognitive': typeof CognitiveRoute
+  '/parkinson': typeof ParkinsonRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/cognitive' | '/parkinson'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/cognitive' | '/parkinson'
+  id: '__root__' | '/' | '/cognitive' | '/parkinson'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CognitiveRoute: typeof CognitiveRoute
+  ParkinsonRoute: typeof ParkinsonRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cognitive': {
+      id: '/cognitive'
+      path: '/cognitive'
+      fullPath: '/cognitive'
+      preLoaderRoute: typeof CognitiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parkinson': {
+      id: '/parkinson'
+      path: '/parkinson'
+      fullPath: '/parkinson'
+      preLoaderRoute: typeof ParkinsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CognitiveRoute: CognitiveRoute,
+  ParkinsonRoute: ParkinsonRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
