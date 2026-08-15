@@ -155,7 +155,7 @@ function Dashboard() {
                 <span className="flex items-center gap-2">
                   <Icon className="size-4 text-primary" aria-hidden /> {title}
                 </span>
-                {level ? <RiskBadge level={level} label={undefined} /> : null}
+                {level ? <RiskBadge level={level} /> : null}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
