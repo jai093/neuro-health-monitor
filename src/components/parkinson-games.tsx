@@ -55,7 +55,12 @@ export function TapTheBalls({ onDone }: { onDone: (s: GameScore) => void }) {
     [total],
   );
 
-  useEffect(() => () => timer.current && clearTimeout(timer.current), []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (index !== total) return;
