@@ -100,7 +100,7 @@ function Row({
 }: {
   title: string;
   score: string | null;
-  level?: "low" | "monitor" | "elevated" | "high";
+  level: RiskLevel | undefined;
 }) {
   return (
     <div className="rounded-xl border border-border p-3">
