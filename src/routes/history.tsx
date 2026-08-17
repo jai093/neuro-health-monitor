@@ -4,7 +4,7 @@ import { AppShell, PageHeader } from "@/components/app-nav";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate, useNeuro } from "@/lib/neuro-store";
+import { formatDate, useNeuro, type RiskLevel } from "@/lib/neuro-store";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
