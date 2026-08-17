@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CognitiveRouteImport } from './routes/cognitive'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ParkinsonRouteImport } from './routes/parkinson'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as StrokeRouteImport } from './routes/stroke'
@@ -37,6 +38,11 @@ const ParkinsonRoute = ParkinsonRouteImport.update({
   path: '/parkinson',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/cognitive': typeof CognitiveRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/recommendations': typeof RecommendationsRoute
   '/stroke': typeof StrokeRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/cognitive': typeof CognitiveRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/recommendations': typeof RecommendationsRoute
   '/stroke': typeof StrokeRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/cognitive': typeof CognitiveRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/recommendations': typeof RecommendationsRoute
   '/stroke': typeof StrokeRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/cognitive'
     | '/history'
     | '/parkinson'
+    | '/profile'
     | '/progress'
     | '/recommendations'
     | '/stroke'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/cognitive'
     | '/history'
     | '/parkinson'
+    | '/profile'
     | '/progress'
     | '/recommendations'
     | '/stroke'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/cognitive'
     | '/history'
     | '/parkinson'
+    | '/profile'
     | '/progress'
     | '/recommendations'
     | '/stroke'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   CognitiveRoute: typeof CognitiveRoute
   HistoryRoute: typeof HistoryRoute
   ParkinsonRoute: typeof ParkinsonRoute
+  ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   RecommendationsRoute: typeof RecommendationsRoute
   StrokeRoute: typeof StrokeRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParkinsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/progress': {
       id: '/progress'
       path: '/progress'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   CognitiveRoute: CognitiveRoute,
   HistoryRoute: HistoryRoute,
   ParkinsonRoute: ParkinsonRoute,
+  ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   RecommendationsRoute: RecommendationsRoute,
   StrokeRoute: StrokeRoute,
