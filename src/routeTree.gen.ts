@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CognitiveRouteImport } from './routes/cognitive'
+import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ParkinsonRouteImport } from './routes/parkinson'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const CognitiveRoute = CognitiveRouteImport.update({
   id: '/cognitive',
   path: '/cognitive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmergencyRoute = EmergencyRouteImport.update({
+  id: '/emergency',
+  path: '/emergency',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -62,6 +68,7 @@ const StrokeRoute = StrokeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
+  '/emergency': typeof EmergencyRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
   '/profile': typeof ProfileRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
+  '/emergency': typeof EmergencyRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
   '/profile': typeof ProfileRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
+  '/emergency': typeof EmergencyRoute
   '/history': typeof HistoryRoute
   '/parkinson': typeof ParkinsonRoute
   '/profile': typeof ProfileRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cognitive'
+    | '/emergency'
     | '/history'
     | '/parkinson'
     | '/profile'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cognitive'
+    | '/emergency'
     | '/history'
     | '/parkinson'
     | '/profile'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cognitive'
+    | '/emergency'
     | '/history'
     | '/parkinson'
     | '/profile'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CognitiveRoute: typeof CognitiveRoute
+  EmergencyRoute: typeof EmergencyRoute
   HistoryRoute: typeof HistoryRoute
   ParkinsonRoute: typeof ParkinsonRoute
   ProfileRoute: typeof ProfileRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/cognitive'
       fullPath: '/cognitive'
       preLoaderRoute: typeof CognitiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emergency': {
+      id: '/emergency'
+      path: '/emergency'
+      fullPath: '/emergency'
+      preLoaderRoute: typeof EmergencyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CognitiveRoute: CognitiveRoute,
+  EmergencyRoute: EmergencyRoute,
   HistoryRoute: HistoryRoute,
   ParkinsonRoute: ParkinsonRoute,
   ProfileRoute: ProfileRoute,
