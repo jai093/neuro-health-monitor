@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CognitiveRouteImport } from './routes/cognitive'
 import { Route as ParkinsonRouteImport } from './routes/parkinson'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as StrokeRouteImport } from './routes/stroke'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ParkinsonRoute = ParkinsonRouteImport.update({
   path: '/parkinson',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StrokeRoute = StrokeRouteImport.update({
   id: '/stroke',
   path: '/stroke',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
   '/parkinson': typeof ParkinsonRoute
+  '/progress': typeof ProgressRoute
   '/stroke': typeof StrokeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
   '/parkinson': typeof ParkinsonRoute
+  '/progress': typeof ProgressRoute
   '/stroke': typeof StrokeRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cognitive': typeof CognitiveRoute
   '/parkinson': typeof ParkinsonRoute
+  '/progress': typeof ProgressRoute
   '/stroke': typeof StrokeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cognitive' | '/parkinson' | '/stroke'
+  fullPaths: '/' | '/cognitive' | '/parkinson' | '/progress' | '/stroke'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cognitive' | '/parkinson' | '/stroke'
-  id: '__root__' | '/' | '/cognitive' | '/parkinson' | '/stroke'
+  to: '/' | '/cognitive' | '/parkinson' | '/progress' | '/stroke'
+  id: '__root__' | '/' | '/cognitive' | '/parkinson' | '/progress' | '/stroke'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CognitiveRoute: typeof CognitiveRoute
   ParkinsonRoute: typeof ParkinsonRoute
+  ProgressRoute: typeof ProgressRoute
   StrokeRoute: typeof StrokeRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParkinsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stroke': {
       id: '/stroke'
       path: '/stroke'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CognitiveRoute: CognitiveRoute,
   ParkinsonRoute: ParkinsonRoute,
+  ProgressRoute: ProgressRoute,
   StrokeRoute: StrokeRoute,
 }
 export const routeTree = rootRouteImport
