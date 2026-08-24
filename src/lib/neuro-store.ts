@@ -238,7 +238,7 @@ export function useNeuro() {
     [update],
   );
 
-  return { state, hydrated, saveProfile, recordModule, deleteAssessment, clearAll };
+  return { state, hydrated, loadError, retry: reload, saveProfile, recordModule, deleteAssessment, clearAll };
 }
 
 export function latestOf(assessments: Assessment[], key: "parkinson" | "cognitive" | "stroke") {
