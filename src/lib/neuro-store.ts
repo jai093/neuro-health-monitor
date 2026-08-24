@@ -145,21 +145,44 @@ function write(state: NeuroState) {
 export function useNeuro() {
   const [state, setState] = useState<NeuroState>(() => initialState());
   const [hydrated, setHydrated] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  const reload = useCallback(() => {
+    const { state: next, error } = readSafe();
+    setState(next);
+    setLoadError(error);
+    if (error) {
+      toast.error("Couldn't load your saved data", {
+        id: "neuro-load-error",
+        description: "Records stored on this device may be corrupted. Retrying usually fixes it.",
+        action: { label: "Retry", onClick: () => reload() },
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    setState(read());
-    setHydrated(true);
-    const onUpdate = () => setState(read());
+    // Small delay keeps skeleton loaders visible while local data is read,
+    // so pages never flash half-rendered content.
+    const timer = window.setTimeout(() => {
+      reload();
+      setHydrated(true);
+    }, 450);
+    const onUpdate = () => {
+      const { state: next, error } = readSafe();
+      setState(next);
+      setLoadError(error);
+    };
     window.addEventListener(EVT, onUpdate);
     window.addEventListener("storage", onUpdate);
     return () => {
+      window.clearTimeout(timer);
       window.removeEventListener(EVT, onUpdate);
       window.removeEventListener("storage", onUpdate);
     };
-  }, []);
+  }, [reload]);
 
   const update = useCallback((fn: (s: NeuroState) => NeuroState) => {
-    const next = fn(read());
+    const next = fn(readSafe().state);
     write(next);
     setState(next);
   }, []);
