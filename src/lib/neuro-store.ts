@@ -3,6 +3,7 @@
  * All data stays in the browser (localStorage). No medical data leaves the device.
  */
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export type RiskLevel = "low" | "monitor" | "elevated" | "high";
 
@@ -97,42 +98,12 @@ export const emptyProfile: Profile = {
   registered: false,
 };
 
-const demo = (monthsAgo: number, m: number, v: number, mem: number, att: number, rec: number, prob: number): Assessment => {
-  const d = new Date();
-  d.setMonth(d.getMonth() - monthsAgo);
-  return {
-    id: `demo-${monthsAgo}`,
-    date: d.toISOString(),
-    label: monthsAgo === 2 ? "Initial Screening" : "Monthly Assessment",
-    parkinson: {
-      motorScore: m,
-      voiceScore: v,
-      gameScore: Math.round((m + v) / 2),
-      overall: Math.round((m + v) / 2),
-      level: levelFromScore(Math.round((m + v) / 2)),
-    },
-    cognitive: {
-      memory: mem,
-      attention: att,
-      recall: rec,
-      reaction: 79,
-      pattern: 80,
-      consistency: 82,
-      overall: Math.round((mem + att + rec + 79 + 80 + 82) / 6),
-      level: levelFromScore(Math.round((mem + att + rec + 79 + 80 + 82) / 6)),
-    },
-    stroke: {
-      probability: prob,
-      level: strokeLevel(prob),
-      factors: ["Blood pressure history", "Body mass index"],
-    },
-  };
-};
-
+// No seeded demo rows: every number in the app comes from a real completed
+// assessment recorded on this device, so scores are always live user data.
 const initialState = (): NeuroState => ({
   profile: emptyProfile,
-  assessments: [demo(2, 68, 74, 72, 78, 70, 0.14), demo(1, 74, 80, 77, 81, 75, 0.17)],
-  badges: ["first-assessment", "monthly-monitoring"],
+  assessments: [],
+  badges: [],
   seeded: true,
 });
 
@@ -150,15 +121,18 @@ export function strokeLevel(p: number): RiskLevel {
   return "high";
 }
 
-function read(): NeuroState {
-  if (typeof window === "undefined") return initialState();
+function readSafe(): { state: NeuroState; error: boolean } {
+  if (typeof window === "undefined") return { state: initialState(), error: false };
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return initialState();
+    if (!raw) return { state: initialState(), error: false };
     const parsed = JSON.parse(raw) as NeuroState;
-    return { ...initialState(), ...parsed, profile: { ...emptyProfile, ...parsed.profile } };
+    return {
+      state: { ...initialState(), ...parsed, profile: { ...emptyProfile, ...parsed.profile } },
+      error: false,
+    };
   } catch {
-    return initialState();
+    return { state: initialState(), error: true };
   }
 }
 
