@@ -167,19 +167,37 @@ export function useNeuro() {
       reload();
       setHydrated(true);
     }, 450);
+    let lastSnapshot = "";
     const onUpdate = () => {
       const { state: next, error } = readSafe();
-      setState(next);
+      const snapshot = JSON.stringify(next);
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        setState(next);
+      }
       setLoadError(error);
     };
+
+    // Realtime refresh: same-tab writes, other tabs/windows, tab focus and
+    // a light poll so every page reflects new assessments without a reload.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") onUpdate();
+    };
+    const poll = window.setInterval(onUpdate, 2000);
     window.addEventListener(EVT, onUpdate);
     window.addEventListener("storage", onUpdate);
+    window.addEventListener("focus", onUpdate);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.clearTimeout(timer);
+      window.clearInterval(poll);
       window.removeEventListener(EVT, onUpdate);
       window.removeEventListener("storage", onUpdate);
+      window.removeEventListener("focus", onUpdate);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [reload]);
+
 
   const update = useCallback((fn: (s: NeuroState) => NeuroState) => {
     const next = fn(readSafe().state);
