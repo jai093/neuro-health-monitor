@@ -167,11 +167,17 @@ export function useNeuro() {
       reload();
       setHydrated(true);
     }, 450);
+    let lastSnapshot = "";
     const onUpdate = () => {
       const { state: next, error } = readSafe();
-      setState(next);
+      const snapshot = JSON.stringify(next);
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        setState(next);
+      }
       setLoadError(error);
     };
+
     // Realtime refresh: same-tab writes, other tabs/windows, tab focus and
     // a light poll so every page reflects new assessments without a reload.
     const onVisible = () => {
