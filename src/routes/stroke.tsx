@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell, PageHeader } from "@/components/app-nav";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -8,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { inferStroke } from "@/lib/inference.functions";
 import { strokeLevel, useNeuro } from "@/lib/neuro-store";
 
 export const Route = createFileRoute("/stroke")({
@@ -38,6 +42,7 @@ const FAST = [
 
 function StrokePage() {
   const { recordModule } = useNeuro();
+  const runInference = useServerFn(inferStroke);
   const [age, setAge] = useState("55");
   const [bmi, setBmi] = useState("26");
   const [glucose, setGlucose] = useState("105");
@@ -46,42 +51,39 @@ function StrokePage() {
   const [smoker, setSmoker] = useState(false);
   const [result, setResult] = useState<{ probability: number; factors: string[] } | null>(null);
 
-  const compute = () => {
-    const a = Number(age) || 0;
-    const b = Number(bmi) || 0;
-    const g = Number(glucose) || 0;
-    const factors: string[] = [];
-    let logit = -5.2 + a * 0.055;
-    if (hypertension) {
-      logit += 0.9;
-      factors.push("Hypertension");
+  const [busy, setBusy] = useState(false);
+
+  const compute = async () => {
+    setBusy(true);
+    try {
+      const scored = await runInference({
+        data: {
+          age: Number(age) || 0,
+          bmi: Number(bmi) || 0,
+          glucose: Number(glucose) || 0,
+          hypertension,
+          heartDisease: heart,
+          smoker,
+        },
+      });
+      setResult(scored);
+      recordModule("stroke", {
+        probability: scored.probability,
+        level: strokeLevel(scored.probability),
+        factors: scored.factors,
+      });
+      toast.success("Stroke risk estimate saved", {
+        description: `${Math.round(scored.probability * 100)}% risk indicator — dashboard and history updated.`,
+      });
+    } catch (error) {
+      toast.error("Couldn't estimate stroke risk", {
+        description:
+          error instanceof Error ? error.message : "Check that age, BMI and glucose are valid numbers.",
+        action: { label: "Retry", onClick: () => void compute() },
+      });
+    } finally {
+      setBusy(false);
     }
-    if (heart) {
-      logit += 1.0;
-      factors.push("Heart disease");
-    }
-    if (smoker) {
-      logit += 0.55;
-      factors.push("Smoking");
-    }
-    if (b >= 30) {
-      logit += 0.4;
-      factors.push("Body mass index in obese range");
-    } else if (b >= 25) {
-      logit += 0.2;
-      factors.push("Body mass index above healthy range");
-    }
-    if (g >= 140) {
-      logit += 0.6;
-      factors.push("Elevated blood glucose");
-    } else if (g >= 110) {
-      logit += 0.3;
-      factors.push("Borderline blood glucose");
-    }
-    if (a >= 65) factors.push("Age 65 or above");
-    const probability = Math.min(0.9, 1 / (1 + Math.exp(-logit)));
-    setResult({ probability, factors: factors.length ? factors : ["No major risk factor reported"] });
-    recordModule("stroke", { probability, level: strokeLevel(probability), factors });
   };
 
   return (
@@ -122,7 +124,10 @@ function StrokePage() {
               </div>
             ))}
             <div className="sm:col-span-2">
-              <Button onClick={compute}>Estimate risk</Button>
+              <Button onClick={() => void compute()} disabled={busy}>
+                {busy ? <Loader2 className="mr-2 size-4 animate-spin" aria-hidden /> : null}
+                {busy ? "Scoring…" : "Estimate risk"}
+              </Button>
             </div>
           </CardContent>
         </Card>
