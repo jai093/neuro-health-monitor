@@ -1,12 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell, PageHeader } from "@/components/app-nav";
 import { RiskBadge, ScoreRing } from "@/components/RiskBadge";
 import { CameraTest, type MotionMetrics } from "@/components/camera-test";
 import { FollowThePath, LeftVsRight, RapidTap, TapTheBalls, type GameScore } from "@/components/parkinson-games";
 import { VoiceTest, type VoiceResult } from "@/components/voice-test";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { inferParkinson } from "@/lib/inference.functions";
 import { levelFromScore, useNeuro } from "@/lib/neuro-store";
 
 export const Route = createFileRoute("/parkinson")({
@@ -28,34 +33,71 @@ export const Route = createFileRoute("/parkinson")({
   component: ParkinsonPage,
 });
 
+type Inference = {
+  motorScore: number | null;
+  voiceScore: number | null;
+  gameScore: number | null;
+  overall: number | null;
+  notes: string[];
+};
+
 function ParkinsonPage() {
   const { recordModule } = useNeuro();
+  const runInference = useServerFn(inferParkinson);
   const [motor, setMotor] = useState<MotionMetrics | null>(null);
   const [voice, setVoice] = useState<VoiceResult | null>(null);
   const [games, setGames] = useState<GameScore[]>([]);
+  const [result, setResult] = useState<Inference | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const motorScore = motor ? Math.round(motor.stability * 0.6 + motor.symmetry * 0.4) : null;
-  const voiceScore = voice ? voice.voiceScore : null;
-  const gameScore = games.length ? Math.round(games.reduce((a, g) => a + g.score, 0) / games.length) : null;
-
-  const parts = [motorScore, voiceScore, gameScore].filter((v): v is number => v != null);
-  const overall = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;
+  const hasInput = motor != null || voice != null || games.length > 0;
 
   const addGame = (s: GameScore) => setGames((prev) => [...prev.filter((g) => g.name !== s.name), s]);
 
-  const save = () => {
-    if (overall == null) return;
-    recordModule(
-      "parkinson",
-      {
-        motorScore: motorScore ?? overall,
-        voiceScore: voiceScore ?? overall,
-        gameScore,
-        overall,
-        level: levelFromScore(overall),
-      },
-      "motor-challenge",
-    );
+  const analyseAndSave = async () => {
+    if (!hasInput) return;
+    setBusy(true);
+    try {
+      const scored = await runInference({
+        data: {
+          motor: motor
+            ? {
+                stability: motor.stability,
+                frequency: motor.frequency,
+                symmetry: motor.symmetry,
+                events: motor.events,
+              }
+            : null,
+          voice: voice
+            ? { jitterPct: voice.jitterPct, shimmer: voice.shimmer, hnr: voice.hnr }
+            : null,
+          games: games.map((g) => ({ name: g.name, score: g.score })),
+        },
+      });
+      setResult(scored);
+      if (scored.overall == null) throw new Error("No task produced a usable signal.");
+      recordModule(
+        "parkinson",
+        {
+          motorScore: scored.motorScore ?? scored.overall,
+          voiceScore: scored.voiceScore ?? scored.overall,
+          gameScore: scored.gameScore,
+          overall: scored.overall,
+          level: levelFromScore(scored.overall),
+        },
+        "motor-challenge",
+      );
+      toast.success("Motor & voice screening saved", {
+        description: `Model score ${scored.overall}/100 — your dashboard and progress charts have updated.`,
+      });
+    } catch (error) {
+      toast.error("Couldn't analyse this session", {
+        description: error instanceof Error ? error.message : "Please try again.",
+        action: { label: "Retry", onClick: () => void analyseAndSave() },
+      });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -63,8 +105,8 @@ function ParkinsonPage() {
       <PageHeader
         eyebrow="Module 1"
         title="Parkinson Screening"
-        description="Complete the motor, voice and game tasks. Signals are analysed in your browser to produce a preliminary screening score."
-        action={overall != null ? <RiskBadge level={levelFromScore(overall)} /> : undefined}
+        description="Complete the motor, voice and game tasks, then run the analysis. Signals are scored by the server-side motor and dysphonia models."
+        action={result?.overall != null ? <RiskBadge level={levelFromScore(result.overall)} /> : undefined}
       />
 
       <Alert className="mb-6">
@@ -94,11 +136,14 @@ function ParkinsonPage() {
           <CardTitle className="text-base">Screening summary</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-8">
-          <ScoreRing value={motorScore ?? 0} caption="Motor" />
-          <ScoreRing value={voiceScore ?? 0} caption="Voice" />
-          <ScoreRing value={gameScore ?? 0} caption="Games" />
-          <ScoreRing value={overall ?? 0} caption="Overall" />
+          <ScoreRing value={result?.motorScore ?? 0} caption="Motor" />
+          <ScoreRing value={result?.voiceScore ?? 0} caption="Voice" />
+          <ScoreRing value={result?.gameScore ?? 0} caption="Games" />
+          <ScoreRing value={result?.overall ?? 0} caption="Overall" />
           <div className="min-w-56 space-y-2 text-sm text-muted-foreground">
+            <p>
+              Tasks captured: {motor ? "motor ✓" : "motor —"} · {voice ? "voice ✓" : "voice —"} · games {games.length}/4
+            </p>
             {games.map((g) => (
               <p key={g.name}>
                 <strong className="text-foreground">{g.name}:</strong> {g.details}
@@ -106,18 +151,20 @@ function ParkinsonPage() {
             ))}
             {voice ? (
               <p>
-                Jitter {voice.jitterPct.toFixed(2)}% · Shimmer {voice.shimmer.toFixed(2)} · HNR{" "}
-                {voice.hnr.toFixed(1)} dB
+                Jitter {voice.jitterPct.toFixed(2)}% · Shimmer {voice.shimmer.toFixed(2)} · HNR {voice.hnr.toFixed(1)} dB
               </p>
             ) : null}
-            <button
-              type="button"
-              onClick={save}
-              disabled={overall == null}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-            >
-              Save to my profile
-            </button>
+            {result?.notes.length ? (
+              <ul className="list-inside list-disc">
+                {result.notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            ) : null}
+            <Button onClick={() => void analyseAndSave()} disabled={!hasInput || busy}>
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              {busy ? "Analysing…" : "Run analysis & save"}
+            </Button>
           </div>
         </CardContent>
       </Card>
