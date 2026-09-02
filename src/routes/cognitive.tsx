@@ -10,6 +10,7 @@ import {
   RecallTest,
   type TestScore,
 } from "@/components/cognitive-tests";
+import { MriUpload, type MriResult } from "@/components/mri-upload";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { levelFromScore, useNeuro } from "@/lib/neuro-store";
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/cognitive")({
 function CognitivePage() {
   const { recordModule } = useNeuro();
   const [scores, setScores] = useState<Record<string, TestScore>>({});
+  const [mri, setMri] = useState<MriResult | null>(null);
   const add = (s: TestScore) => setScores((prev) => ({ ...prev, [s.key]: s }));
 
   const get = (k: string) => scores[k]?.score ?? null;
@@ -68,7 +70,7 @@ function CognitivePage() {
         consistency,
         overall,
         level: levelFromScore(overall),
-        mri: null,
+        mri: mri ? { className: mri.className, confidence: mri.confidence } : null,
       },
       "cognitive-challenge",
     );
@@ -97,6 +99,7 @@ function CognitivePage() {
         <RecallTest onDone={add} />
         <ReactionTest onDone={add} />
         <PatternTest onDone={add} />
+        <MriUpload onResult={setMri} />
       </div>
 
       <Card className="mt-6">
@@ -112,6 +115,12 @@ function CognitivePage() {
               </p>
             ))}
             <p>Consistency across tasks: {consistency}/100</p>
+            {mri ? (
+              <p>
+                <strong className="text-foreground">MRI indicator:</strong> {mri.className} (
+                {Math.round(mri.confidence * 100)}% confidence)
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={save}
