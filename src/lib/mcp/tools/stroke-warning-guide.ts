@@ -1,8 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-import { defineTool as _unused } from "@lovable.dev/mcp-js";
 import { DISCLAIMER } from "../scoring";
 
-void _unused;
 
 const FAST = [
   { step: 1, letter: "F", name: "Face", check: "Ask the person to smile. Does one side of the face droop?" },
