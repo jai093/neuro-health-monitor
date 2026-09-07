@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "sdk_version": "2.0.3",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "neuro-health-monitor",
+      "version": "0.1.0",
+      "title": "Neuro Health Monitor"
+    },
+    "tools": [
+      {
+        "name": "estimate_stroke_risk",
+        "title": "Estimate stroke risk",
+        "description": "Estimate a preliminary stroke risk probability and risk tier from general health risk factors, using the same logistic model as the app's stroke screening module.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "age": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Age in years."
+            },
+            "bmi": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 80,
+              "description": "Body mass index."
+            },
+            "glucose": {
+              "type": "number",
+              "minimum": 30,
+              "maximum": 500,
+              "description": "Average blood glucose level (mg/dL)."
+            },
+            "hypertension": {
+              "type": "boolean",
+              "description": "Diagnosed with high blood pressure."
+            },
+            "heartDisease": {
+              "type": "boolean",
+              "description": "Diagnosed with heart disease."
+            },
+            "smoker": {
+              "type": "boolean",
+              "description": "Currently smokes."
+            }
+          },
+          "required": [
+            "age",
+            "bmi",
+            "glucose",
+            "hypertension",
+            "heartDisease",
+            "smoker"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "score_parkinson_signals",
+        "title": "Score Parkinson motor and voice signals",
+        "description": "Score motor-stability and sustained-vowel voice measurements into a preliminary Parkinson screening score, with notes on tremor-band oscillation and dysphonia features.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "stability": {
+              "description": "Hand steadiness score 0-100.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "symmetry": {
+              "description": "Left/right movement symmetry 0-100.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "frequency": {
+              "description": "Dominant oscillation frequency in Hz.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "jitterPct": {
+              "description": "Voice jitter as a percentage.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "shimmer": {
+              "description": "Voice shimmer (amplitude variation).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "hnr": {
+              "description": "Harmonics-to-noise ratio in dB.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50
+            },
+            "gameScore": {
+              "description": "Average motor game score 0-100.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "interpret_score",
+        "title": "Interpret a screening score",
+        "description": "Turn a NeuroShield screening score (0-100 for Parkinson/cognitive, or a 0-1 probability for stroke) into its risk tier and the guidance the app shows for that tier.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "parkinson",
+                "cognitive",
+                "stroke"
+              ],
+              "description": "Which module the value came from."
+            },
+            "value": {
+              "type": "number",
+              "description": "Score 0-100 for parkinson/cognitive, or stroke probability between 0 and 1."
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "stroke_warning_guide",
+        "title": "Stroke warning guide (FAST)",
+        "description": "Return the step-by-step FAST stroke check, the list of urgent warning symptoms, and the app's emergency guidance.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
